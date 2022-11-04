@@ -10,6 +10,8 @@ class ServerStartTest {
     @Test
     void run() {
         Server server = new Server();
+        server.setPort(3000);
+        server.setWebAppPath("src/main/resources");
         server.run();
     }
 }
