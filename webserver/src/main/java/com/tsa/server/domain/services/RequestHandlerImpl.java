@@ -8,6 +8,8 @@ import com.tsa.server.domain.util.HttpStatus;
 import com.tsa.server.domain.util.RequestParser;
 import com.tsa.server.domain.util.ResponseWriter;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -43,9 +45,12 @@ public class RequestHandlerImpl implements RequestHandler {
         try (var input = contentReader.readContent(parsedRequest.getUri())) {
 
             ResponseWriter.writeResponse(input, outputStream, new Response(HttpStatus.OK));
-        } catch (Exception e) {
+        } catch (FileNotFoundException e) {
             ResponseWriter.writeErrorResponse(outputStream, new Response(HttpStatus.NOT_FOUND));
             throw new RuntimeException("FILE is not found");
+        } catch (IOException e) {
+            ResponseWriter.writeErrorResponse(outputStream, new Response(HttpStatus.INTERNAL_SERVER_ERROR));
+            throw new RuntimeException("Internal server error");
         }
 
     }
