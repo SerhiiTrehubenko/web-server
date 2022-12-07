@@ -8,9 +8,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 
 class WebClientITest {
-    public static final String HOME_REQUEST = "GET /index.html HTTP/1.1";
-    public static final String IMAGE_SOURCE_REQUEST = "GET /image/Windows.jpg HTTP/1.1";
-    public static final String CSS_REQUEST = "GET /css/styles.css HTTP/1.1";
+    private static final String HOME_REQUEST = "GET /index.html HTTP/1.1";
+    private static final String IMAGE_SOURCE_REQUEST = "GET /image/Windows.jpg HTTP/1.1";
+    private static final String CSS_REQUEST = "GET /css/styles.css HTTP/1.1";
     WebClient webClient = new WebClient(3000);
 
     @Test
