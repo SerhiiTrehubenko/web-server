@@ -5,15 +5,15 @@ import com.tsa.server.domain.dto.Request;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class RequestParser {
 
-    private final static String SPLIT_WHITE_SPACE = " ";
-    private  static String line;
+    private final static Pattern SPLIT_WHITE_SPACE = Pattern.compile(" ");
 
     public static Request parseRequest(InputStream inputStream) {
         Request request = new Request();
-        try  {
+        try {
             var input = new BufferedReader(new InputStreamReader(inputStream));
             injectUri(input, request);
             injectHeaders(input, request);
@@ -23,24 +23,27 @@ public class RequestParser {
         return request;
     }
 
-    public static void injectUri(BufferedReader input, Request request) throws IOException {
-        line = input.readLine();
-        String[] splitLine = line.split(SPLIT_WHITE_SPACE);
-        if (splitLine.length < 3) {
-            throw  new RuntimeException("bad request");
+    public static void injectUri(BufferedReader inputFromSocket, Request request) throws IOException {
+        String startingline = inputFromSocket.readLine();
+        String[] splitLine = SPLIT_WHITE_SPACE.split(startingline);
+        if (splitLine.length != 3) {
+            throw new RuntimeException("bad request");
         }
-        request.setUri(splitLine[1]);
         request.setHttpMethod(splitLine[0]);
+        request.setUri(splitLine[1]);
     }
 
-    public static void injectHeaders(BufferedReader input, Request request) throws IOException {
+    public static void injectHeaders(BufferedReader inputFromSocket, Request request) throws IOException {
         Map<String, String> headers = new HashMap<>();
-
+        char headDelimiter = ' ';
+        String header;
         while (true) {
-            line = input.readLine();
-            if (line == null || line.isEmpty()) break;
-            String keyHeader = line.substring(0, line.indexOf(SPLIT_WHITE_SPACE)).trim();
-            String valueHeader = line.substring(line.indexOf(SPLIT_WHITE_SPACE)).trim();
+            header = inputFromSocket.readLine();
+            if (header == null || header.isEmpty()) {
+                break;
+            }
+            String keyHeader = header.substring(0, header.indexOf(headDelimiter)).trim();
+            String valueHeader = header.substring(header.indexOf(headDelimiter)).trim();
             headers.put(keyHeader, valueHeader);
         }
         request.setHeaders(headers);

@@ -15,9 +15,7 @@ class ServerTest {
 
     @Test
     void startServer() {
-        var server = new Server();
-        server.setPort(3000);
-        server.setWebAppPath(Paths.get("/src/main/resources"));
+        var server = new Server(3000, "/src/main/resources");
         server.startServer();
     }
 }

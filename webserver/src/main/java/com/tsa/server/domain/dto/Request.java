@@ -10,7 +10,6 @@ public class Request {
     private Map<String, String> headers;
 
     public Request() {
-        this(null, null, null);
     }
 
     public Request(String httpMethod, String uri, Map<String, String> headers) {
@@ -21,10 +20,6 @@ public class Request {
 
     public void setHttpMethod(String httpMethod) {
         this.httpMethod = httpMethod == null ? null : HttpMethod.valueOf(httpMethod);
-    }
-
-    public void setHttpMethod(HttpMethod httpMethod) {
-        this.httpMethod = httpMethod;
     }
 
     public void setUri(String uri) {
@@ -47,12 +42,4 @@ public class Request {
         return headers;
     }
 
-    @Override
-    public String toString() {
-        return "Request{" +
-                "httpMethod=" + httpMethod +
-                ", uri='" + uri + '\'' +
-                ", headers=" + headers +
-                '}';
-    }
 }

@@ -13,15 +13,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-public class RequestHandlerImpl implements RequestHandler {
+public class DefaultRequestHandler implements RequestHandler {
 
     private final InputStream inputStream;
     private final OutputStream outputStream;
     private final ContentReader contentReader;
 
-    public RequestHandlerImpl(InputStream inputStream,
-                              OutputStream outputStream,
-                              ContentReader contentReader) {
+    public DefaultRequestHandler(InputStream inputStream,
+                                 OutputStream outputStream,
+                                 ContentReader contentReader) {
         this.inputStream = inputStream;
         this.outputStream = outputStream;
         this.contentReader = contentReader;
@@ -37,20 +37,22 @@ public class RequestHandlerImpl implements RequestHandler {
             throw new RuntimeException(e);
         }
 
-        if (!parsedRequest.getHttpMethod().getDescription()) {
+        if (!parsedRequest.getHttpMethod().isImplemented()) {
 
             ResponseWriter.writeErrorResponse(outputStream, new Response(HttpStatus.NOT_IMPLEMENTED));
             throw new RuntimeException("HTTP method is not implemented");
         }
-        try (var input = contentReader.readContent(parsedRequest.getUri())) {
 
-            ResponseWriter.writeResponse(input, outputStream, new Response(HttpStatus.OK));
+        try (var input = contentReader.getConnectionToContent(parsedRequest.getUri())) {
+
+            ResponseWriter.writeSuccessResponse(input, outputStream, new Response(HttpStatus.OK));
+
         } catch (FileNotFoundException e) {
             ResponseWriter.writeErrorResponse(outputStream, new Response(HttpStatus.NOT_FOUND));
-            throw new RuntimeException("FILE is not found");
+            throw new RuntimeException("FILE is not found", e.getCause());
         } catch (IOException e) {
             ResponseWriter.writeErrorResponse(outputStream, new Response(HttpStatus.INTERNAL_SERVER_ERROR));
-            throw new RuntimeException("Internal server error");
+            throw new RuntimeException("Internal server error", e.getCause());
         }
 
     }

@@ -4,5 +4,5 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 
 public interface ContentReader {
-    InputStream readContent(String filePath) throws FileNotFoundException;
+    InputStream getConnectionToContent(String filePath) throws FileNotFoundException;
 }

@@ -8,34 +8,37 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 public class ResponseWriter {
-    public static void writeResponse(InputStream inputStream,
-                                     OutputStream outputStream,
-                                     Response response) {
+    public static void writeSuccessResponse(InputStream inputFromFile,
+                                            OutputStream outputToSocket,
+                                            Response response) {
 
-        byte[] retrievedBytes = new byte[8*1024];
+        byte[] buffer = new byte[8 * 1024];
         int count;
-        try (var input = new DataInputStream(inputStream);
-        var out = new DataOutputStream(outputStream)){
+        try (var inputFile = new DataInputStream(inputFromFile)) {
 
-            out.write(response.toString().getBytes());
+            var outToSocket = new DataOutputStream(outputToSocket);
+            outToSocket.write(responseToBytes(response));
 
-            while ((count = input.read(retrievedBytes)) != -1){
-
-                out.write(retrievedBytes, 0, count);
-                out.flush();
+            while ((count = inputFile.read(buffer)) != -1) {
+                outToSocket.write(buffer, 0, count);
+                outToSocket.flush();
             }
+
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
-    public static void writeErrorResponse(OutputStream outputStream, Response response) {
-        try (var out = new DataOutputStream(outputStream)){
 
-            out.write(response.toString().getBytes());
-
+    public static void writeErrorResponse(OutputStream outputToSocket, Response response) {
+        try {
+            var out = new DataOutputStream(outputToSocket);
+            out.write(responseToBytes(response));
         } catch (Exception e) {
-
             throw new RuntimeException(e);
         }
+    }
+
+    private static byte[] responseToBytes(Response response) {
+        return (response.getHttpStatus().getDescription() + response.getContent()).getBytes();
     }
 }

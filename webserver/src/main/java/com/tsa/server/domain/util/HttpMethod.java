@@ -8,9 +8,11 @@ public enum HttpMethod {
     PATCH(false);
 
     private final boolean description;
-    public boolean getDescription() {
+
+    public boolean isImplemented() {
         return description;
     }
+
     HttpMethod(boolean description) {
         this.description = description;
     }
