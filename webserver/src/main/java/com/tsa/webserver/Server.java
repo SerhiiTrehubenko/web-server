@@ -7,18 +7,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import static com.tsa.webserver.HttpStatus.*;
 
 public class Server implements Runnable {
-    private final static byte[] CRLF = "\r\n".getBytes();
-    private final static String ROOT_PATH = Path.of("").toAbsolutePath().toString();
-    public final static String HOME_REQUEST = "GET /index.html HTTP/1.1";
-    public final static String IMAGE_SOURCE_REQUEST = "GET /image/Windows.jpg HTTP/1.1";
-    public final static String CSS_REQUEST = "GET /css/styles.css HTTP/1.1";
-    private final static String OK = "HTTP/1.1 200 OK";
-    private final static String NOT_FOUND = "HTTP/1.1 404 Not Found";
-    //    private final static String SEVER_ERROR = "HTTP/1.1 500 Internal Server Error";
-    private final static byte[] BUFFER = new byte[8 * 1024];
-    private static final List<String> REQEST = new ArrayList<>();
+    private static final byte[] CRLF = "\r\n".getBytes();
+    private static final String ROOT_PATH = Path.of("").toAbsolutePath().toString();
+    private static final byte[] BUFFER = new byte[8 * 1024];
+    private static final List<String> BROWSER_REQUEST = new ArrayList<>();
 
     public void setPort(int port) {
         this.port = port;
@@ -41,36 +36,28 @@ public class Server implements Runnable {
                      var input = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
                     String line;
                     while (!(line = input.readLine()).isEmpty()) {
-                        REQEST.add(line);
-                        System.out.println(line);
+                        BROWSER_REQUEST.add(line);
                     }
-                    String request = REQEST.get(0).split(" ")[1];
-                    responce(request, socket);
+                    String uri = getUriFromRequest();
+                    response(uri, socket);
                 } catch (Throwable e) {
                     e.printStackTrace();
                 }
-                REQEST.clear();
-                System.out.println("******************");
+                BROWSER_REQUEST.clear();
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void responseError(Socket socket, String message) {
-        try (var outImage = new DataOutputStream(socket.getOutputStream())) {
-            outImage.write(message.getBytes());
-            outImage.write(CRLF);
-            outImage.write(CRLF);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    private String getUriFromRequest() {
+        return BROWSER_REQUEST.get(0).split(" ")[1];
     }
 
-    private void responce(String filePath, Socket socket) {
-        try (var inputFile = new FileInputStream(Paths.get(ROOT_PATH, webAppPath, filePath).toFile());
+    private void response(String uri, Socket socket) {
+        try (var inputFile = new FileInputStream(Paths.get(ROOT_PATH, webAppPath, uri).toFile());
              var outImage = new DataOutputStream(socket.getOutputStream())) {
-            outImage.write(Server.OK.getBytes());
+            outImage.write(OK.getStatus().getBytes());
             outImage.write(CRLF);
             outImage.write(CRLF);
             int count;
@@ -78,8 +65,21 @@ public class Server implements Runnable {
                 outImage.write(BUFFER, 0, count);
                 outImage.flush();
             }
+        } catch (FileNotFoundException e) {
+            responseError(socket, NOT_FOUND.getStatus());
+            throw new RuntimeException(e);
+        } catch(IOException e) {
+            responseError(socket, SEVER_ERROR.getStatus());
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void responseError(Socket socket, String httpStatus) {
+        try (var outImage = new DataOutputStream(socket.getOutputStream())) {
+            outImage.write(httpStatus.getBytes());
+            outImage.write(CRLF);
+            outImage.write(CRLF);
         } catch (Exception e) {
-            responseError(socket, NOT_FOUND);
             throw new RuntimeException(e);
         }
     }
