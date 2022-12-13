@@ -1,8 +1,9 @@
 package com.tsa.server.domain.interfaces;
 
-import java.io.FileNotFoundException;
+import com.tsa.server.domain.exceptions.WebServerException;
+
 import java.io.InputStream;
 
 public interface ContentReader {
-    InputStream getConnectionToContent(String filePath) throws FileNotFoundException;
+    InputStream getConnectionToContent(String filePath) throws WebServerException;
 }

@@ -1,60 +1,61 @@
 package com.tsa.server.domain.services;
 
+import static com.tsa.server.domain.util.RequestParser.*;
+import static com.tsa.server.domain.util.ResponseWriter.*;
+
 import com.tsa.server.domain.dto.Request;
 import com.tsa.server.domain.dto.Response;
+import com.tsa.server.domain.exceptions.*;
 import com.tsa.server.domain.interfaces.ContentReader;
 import com.tsa.server.domain.interfaces.RequestHandler;
+import com.tsa.server.domain.util.HttpMethod;
 import com.tsa.server.domain.util.HttpStatus;
-import com.tsa.server.domain.util.RequestParser;
-import com.tsa.server.domain.util.ResponseWriter;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
 public class DefaultRequestHandler implements RequestHandler {
 
-    private final InputStream inputStream;
-    private final OutputStream outputStream;
+    private final InputStream inputFromSocket;
+    private final OutputStream outputToSocket;
     private final ContentReader contentReader;
 
-    public DefaultRequestHandler(InputStream inputStream,
-                                 OutputStream outputStream,
+    /**
+     * for testing purpose
+     */
+    DefaultRequestHandler() {
+        this(null, null, null);
+    }
+
+    public DefaultRequestHandler(InputStream inputFromSocket,
+                                 OutputStream outputToSocket,
                                  ContentReader contentReader) {
-        this.inputStream = inputStream;
-        this.outputStream = outputStream;
+        this.inputFromSocket = inputFromSocket;
+        this.outputToSocket = outputToSocket;
         this.contentReader = contentReader;
     }
 
     @Override
     public void handle() {
-        Request parsedRequest;
         try {
-            parsedRequest = RequestParser.parseRequest(inputStream);
-        } catch (Exception e) {
-            ResponseWriter.writeErrorResponse(outputStream, new Response(HttpStatus.BAD_REQUEST));
+            Request parsedRequest = parseRequest(inputFromSocket);
+
+            checkHttpMethodOnImplementation(parsedRequest.getHttpMethod());
+
+            var inputFromSourceFile = contentReader.getConnectionToContent(parsedRequest.getUri());
+            writeSuccessResponse(inputFromSourceFile, outputToSocket, new Response(HttpStatus.OK));
+
+        } catch (WriteToSocketException e) {
+            throw new RuntimeException(e);
+        } catch (WebServerException e) {
+            writeErrorResponse(outputToSocket, new Response(e.getStatus()));
             throw new RuntimeException(e);
         }
-
-        if (!parsedRequest.getHttpMethod().isImplemented()) {
-
-            ResponseWriter.writeErrorResponse(outputStream, new Response(HttpStatus.NOT_IMPLEMENTED));
-            throw new RuntimeException("HTTP method is not implemented");
-        }
-
-        try (var input = contentReader.getConnectionToContent(parsedRequest.getUri())) {
-
-            ResponseWriter.writeSuccessResponse(input, outputStream, new Response(HttpStatus.OK));
-
-        } catch (FileNotFoundException e) {
-            ResponseWriter.writeErrorResponse(outputStream, new Response(HttpStatus.NOT_FOUND));
-            throw new RuntimeException("FILE is not found", e.getCause());
-        } catch (IOException e) {
-            ResponseWriter.writeErrorResponse(outputStream, new Response(HttpStatus.INTERNAL_SERVER_ERROR));
-            throw new RuntimeException("Internal server error", e.getCause());
-        }
-
     }
 
+    void checkHttpMethodOnImplementation(HttpMethod httpMethod) throws WebServerException {
+        if (!httpMethod.isImplemented()) {
+            throw new WebServerException("HTTP method is not implemented", HttpStatus.NOT_IMPLEMENTED);
+        }
+    }
 }

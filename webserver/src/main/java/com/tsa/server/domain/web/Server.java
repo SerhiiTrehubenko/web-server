@@ -10,15 +10,16 @@ import java.net.ServerSocket;
 
 public class Server {
     private final int port;
-    private final ContentReader contentReader;
+    private final String webAppPath;
 
-    public Server(int port, String path) {
+    public Server(int port, String webAppPath) {
         this.port = port;
-        this.contentReader = new DefaultContentReader(path);
+        this.webAppPath = webAppPath;
     }
 
-    public void startServer() {
+    public void start() {
         int count = 0;
+        ContentReader contentReader = new DefaultContentReader(webAppPath);
         try (var serverSocket = new ServerSocket(port)) {
 
             while (!serverSocket.isClosed()) {

@@ -2,18 +2,21 @@ package com.tsa.server.domain.util;
 
 public enum HttpStatus {
 
-    OK("HTTP/1.1 200 OK"),
-    BAD_REQUEST("HTTP/1.1 400 Bad Request"),
-    NOT_FOUND("HTTP/1.1 404 Not Found"),
-    INTERNAL_SERVER_ERROR("HTTP/1.1 500 Internal Server Error"),
-    NOT_IMPLEMENTED("HTTP/1.1 501 Not Implemented");
-    private final String description;
+    OK("200 OK"),
+    BAD_REQUEST("400 Bad Request"),
+    NOT_FOUND("404 Not Found"),
+    INTERNAL_SERVER_ERROR("500 Internal Server Error"),
+    NOT_IMPLEMENTED("501 Not Implemented"),
 
-    public String getDescription() {
-        return description;
+    LOST_CONNECTION("Connection with a client was lost"),
+    HTTP_SUFFIX("HTTP/1.1 ");
+    private final String status;
+
+    public String getStatus() {
+        return status;
     }
 
-    HttpStatus(String description) {
-        this.description = description;
+    HttpStatus(String status) {
+        this.status = status;
     }
 }

@@ -9,17 +9,8 @@ public class Request {
     private String uri;
     private Map<String, String> headers;
 
-    public Request() {
-    }
-
-    public Request(String httpMethod, String uri, Map<String, String> headers) {
-        this.httpMethod = httpMethod == null ? null : HttpMethod.valueOf(httpMethod);
-        this.uri = uri;
-        this.headers = headers;
-    }
-
     public void setHttpMethod(String httpMethod) {
-        this.httpMethod = httpMethod == null ? null : HttpMethod.valueOf(httpMethod);
+        this.httpMethod = HttpMethod.valueOf(httpMethod);
     }
 
     public void setUri(String uri) {
